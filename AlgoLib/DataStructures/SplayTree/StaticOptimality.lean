@@ -15,6 +15,8 @@ namespace Weighted
 
 open Tree
 
+/-- Total cost of a sequence of accesses in the static tree `t`: the sum of the search path
+lengths of the accessed keys. -/
 def staticCost {m : ℕ} [LinearOrder α] (t : Tree α) (X : Fin m → α) : ℕ :=
   ∑ i, search_path_len t (X i)
 

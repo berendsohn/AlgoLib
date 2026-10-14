@@ -87,11 +87,11 @@ theorem nlogn_cost (n m : ℕ) (X : Fin m → α)
     sequenceCost init X ≤ m * (3 * Real.logb 2 n + 1) + n * Real.logb 2 n :=
   SplayTree.nlogn_cost n m X init.tree h_size
 
-/-! ### Static optimality -/
+/-! ### Static Optimality -/
 
 /-- Total cost of a sequence of accesses in the given static tree. -/
-def staticCost {m : ℕ} [LinearOrder α] (t : BST α) (X : Fin m → α) : ℕ :=
-  ∑ i, search_path_len t.tree (X i)
+def staticCost {m : ℕ} (t : BST α) (X : Fin m → α) : ℕ :=
+  SplayTree.Weighted.staticCost t.tree X
 
 /--
 Splay performs as well as any static tree `s`, with any initial tree `init`, up to constant factors
