@@ -162,7 +162,7 @@ lemma rank_le_of_size_le (hw : FnLbOne w) (s t : Tree α) (h : size w s ≤ size
     apply (Real.logb_nonpos_iff' (by simp) ?_).mpr
     · linarith
     · apply size_nonneg'' hw
-  · apply SplayTree.logb_mono
+  · apply Real.logb_le_logb_of_le (by norm_num)
     · exact size_pos_of_non_nil (FnPos_of_FnLbOne hw) _ (by simp)
     · linarith [h]
 
@@ -460,7 +460,8 @@ theorem splay_access_lemma [LinearOrder α]
     _ ≤ 3 * (Real.logb 2 (size w t) - rank w (l △[q] r)) + 1 := by simp [rank]
     _ ≤ 3 * (Real.logb 2 (size w t) - Real.logb 2 (w q)) + 1 := by
       have : Real.logb 2 (w q) ≤ rank w (l △[q] r) := by
-        simp only [rank, size_node]; apply logb_mono (by linarith [hw q])
+        simp only [rank, size_node]
+        apply Real.logb_le_logb_of_le (by norm_num) (by linarith [hw q])
         linarith [size_nonneg'' hw l, size_nonneg'' hw r]
       linarith
     _ ≤ 3 * Real.logb 2 (size w t / w q) + 1 := by
