@@ -64,7 +64,6 @@ lemma num_nodes_from_toKeyList (t : Tree α) : t.num_nodes = t.toKeyList.length 
   | nil => simp
   | node v l r lih rih => simp [lih, rih]; omega
 
-
 /-- Number of nodes on the search path for `q` in `t`. Zero on the empty
 tree; on a node this counts the root plus (if `q ≠ k`) the search path
 length in the appropriate subtree. -/
@@ -82,8 +81,8 @@ def search_path_len [LinearOrder α] (t : Tree α) (q : α) : ℕ :=
 lemma search_path_len_le_num_nodes [LinearOrder α] (t : Tree α) (q : α) :
     search_path_len t q ≤ t.num_nodes := by
   induction t with
-  | nil => simp[search_path_len]
-  | node v l r ihl ihr => simp[search_path_len]; split_ifs; all_goals omega
+  | nil => simp [search_path_len]
+  | node v l r ihl ihr => simp [search_path_len]; split_ifs; all_goals omega
 
 /--
 Remark:
@@ -294,22 +293,22 @@ private lemma IsBSTAux_children_none [LinearOrder α] (t : Tree α) (x y : Optio
   | node k l r lih rih =>
     simp only [IsBSTAux_node] at h
     rcases h with ⟨_, _, h1, h2⟩
-    rcases lih x (some k) h1 with ⟨_,_,_⟩
-    rcases rih (some k) y h2 with ⟨_,_,_⟩
+    rcases lih x (some k) h1 with ⟨_, _, _⟩
+    rcases rih (some k) y h2 with ⟨_, _, _⟩
     simp only [IsBSTAux_node, Option.elim_none, true_and]; split_ands; all_goals assumption
 
 private lemma IsBST_of_IsBSTAux [LinearOrder α] {t : Tree α} {x y : Option α}
     (h : IsBSTAux t x y) : IsBST t := by
-  unfold IsBST; rcases IsBSTAux_children_none t x y h with ⟨_,_,_⟩; assumption
+  unfold IsBST; rcases IsBSTAux_children_none t x y h with ⟨_, _, _⟩; assumption
 
 theorem IsBST_left_of_IsBST [LinearOrder α] {k : α} {l r : Tree α}
     (hbst : IsBST (l △[k] r)) : IsBST l := by
-  simp only [IsBST, IsBSTAux_node, Option.elim_none, true_and] at hbst; rcases hbst with ⟨hl,_⟩
+  simp only [IsBST, IsBSTAux_node, Option.elim_none, true_and] at hbst; rcases hbst with ⟨hl, _⟩
   exact IsBST_of_IsBSTAux hl
 
 theorem IsBST_right_of_IsBST [LinearOrder α] {k : α} {l r : Tree α}
     (hbst : IsBST (l △[k] r)) : IsBST r := by
-  simp only [IsBST, IsBSTAux_node, Option.elim_none, true_and] at hbst; rcases hbst with ⟨_,hr⟩
+  simp only [IsBST, IsBSTAux_node, Option.elim_none, true_and] at hbst; rcases hbst with ⟨_, hr⟩
   exact IsBST_of_IsBSTAux hr
 
 end IsBSTAccessors
@@ -373,19 +372,19 @@ theorem contains_iff_mem [LinearOrder α] {t : Tree α} (hbst : IsBST t) {q : α
 /-- For BSTs, all keys in the left subtree are smaller than the root key. -/
 theorem lt_of_IsBST_left [LinearOrder α] (l : Tree α) (k : α) (r : Tree α)
     (hbst : IsBST (l △[k] r)) {q : α} (hql : q ∈ l) : q < k := by
-  simp only [IsBST_node] at hbst; rcases hbst with ⟨hl,_⟩
+  simp only [IsBST_node] at hbst; rcases hbst with ⟨hl, _⟩
   exact IsBSTAux.lt_of_mem_ub hl hql
 
 /-- For BSTs, all keys in the right subtree are greater than the root key. -/
 theorem gt_of_IsBST_right [LinearOrder α] (l : Tree α) (k : α) (r : Tree α)
     (hbst : IsBST (l △[k] r)) {q : α} (hqr : q ∈ r) : k < q := by
-  simp only [IsBST_node] at hbst; rcases hbst with ⟨_,hr⟩
+  simp only [IsBST_node] at hbst; rcases hbst with ⟨_, hr⟩
   exact IsBSTAux.gt_of_mem_lb hr hqr
 
 /-- A tree that contains something is not nil. -/
 theorem nonnil_of_mem {t : Tree α} (q : α) (hq : q ∈ t) : (t ≠ nil) := by
   by_contra
-  have : q ∉ t := by rw[this]; exact not_mem_nil q
+  have : q ∉ t := by rw [this]; exact not_mem_nil q
   contradiction
 
 end BSTMembership
