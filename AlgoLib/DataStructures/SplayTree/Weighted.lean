@@ -202,7 +202,7 @@ lemma rank_eq_of_toKeyList_eq {s t : Tree α}
   | nil =>
     simp only
     simp only [toKeyList, List.nil_eq] at h
-    rw [size_from_toKeyList, h, List.map_nil, List.sum_nil, nil_of_toKeyList_empty h]
+    rw [size_from_toKeyList, h, List.map_nil, List.sum_nil, eq_nil_of_toKeyList_eq_nil h]
   | node v l r =>
     have : t.toKeyList ≠ [] := by rw [←h]; simp
     have : t ≠ nil := by contrapose this; rw [this]; exact toKeyList_empty
@@ -462,7 +462,7 @@ theorem φ_splayUp (hw : FnLbOne w) (c : Tree α) (hc : c ≠ nil) (path : List 
         simp only [reassemble_cons]; push_cast
         have : step_tree ≠ nil := by
           unfold step_tree; apply Dir.bringUp_ne_nil_of_ne_nil;
-          apply Dir.applyChild_ne_nil_of_ne_nil
+          apply applyChild_ne_nil_of_ne_nil
           unfold s; apply Frame.attach_ne_nil
         nlinarith [ih step_tree this,
           φ_reassemble_congr rest hsize.symm, φ_zigzag hw a l r f1 f2 hdir]
@@ -489,7 +489,7 @@ theorem splay_access_lemma [LinearOrder α]
   rw [←hreached, hpres, hreached] at hφ
   have hrank_eq : rank w (splayUp (l △[q] r) path) = rank w t := by
     have h := rank_splay w t q; simp only [splay, hdecomp, hreached] at h; exact h
-  have htnn : t ≠ nil := nonnil_of_mem q hq
+  have htnn : t ≠ nil := ne_nil_of_mem q hq
   calc φ w (splayUp (l △[q] r) path) - φ w t + ↑path.length
       ≤ 3 * (rank w (splayUp (l △[q] r) path) - rank w (l △[q] r)) + 1 := by exact_mod_cast hφ
     _ ≤ 3 * (rank w t - rank w (l △[q] r)) + 1 := by simp [hrank_eq]

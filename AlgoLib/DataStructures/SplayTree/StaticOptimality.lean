@@ -187,7 +187,7 @@ private lemma staticWeight_φ_ub [LinearOrder α] (s t : Tree α)
         · exact hbst
     _ ≤ s.num_nodes ^ 2 * Real.logb 2 3 := by
       have : s.num_nodes = t.num_nodes := by
-        simp [num_nodes_from_toKeyList, hst]
+        simp [num_nodes_eq_length_toKeyList, hst]
       rw [pow_two, this]
 
 /-- This variant requires an extra assumption hsbst, even though that is implied by the other
@@ -199,12 +199,12 @@ private lemma splay_tree_static_optimality' [LinearOrder α] (m : ℕ)
     let n := s.num_nodes
     splay.sequence_cost init X ≤ m + (Real.logb 2 3) * (3 * staticCost s X + n ^ 2) := by
   by_cases hinit : init = nil
-  · have : s = nil := by apply nil_of_toKeyList_empty; simp [hkeys, hinit]
+  · have : s = nil := by apply eq_nil_of_toKeyList_eq_nil; simp [hkeys, hinit]
     have hsnc : s.num_nodes = 0 := by simp [this]
     cases m with
     | zero => simp [hsnc, splay.sequence_cost]
     | succ m =>
-      have : init ≠ nil := nonnil_of_mem (X (Fin.last m)) (hX (Fin.last m))
+      have : init ≠ nil := ne_nil_of_mem (X (Fin.last m)) (hX (Fin.last m))
       contradiction
   · have hφ_ub : (∀ (t : Tree α), t.toKeyList = init.toKeyList
         → φ (staticWeight s) t ≤ ↑s.num_nodes ^ 2 * Real.logb 2 3) := by

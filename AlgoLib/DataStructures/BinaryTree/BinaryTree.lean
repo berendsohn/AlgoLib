@@ -54,12 +54,12 @@ def toKeyList : Tree α → List α
 @[simp] lemma toKeyList_node (l : Tree α) (k : α) (r : Tree α) :
     (l △[k] r).toKeyList = l.toKeyList ++ [k] ++ r.toKeyList := rfl
 
-lemma nil_of_toKeyList_empty {t : Tree α} (h : toKeyList t = []) : t = nil := by
+lemma eq_nil_of_toKeyList_eq_nil {t : Tree α} (h : toKeyList t = []) : t = nil := by
   cases t
   · simp
   · simp [List.append_assoc] at h
 
-lemma num_nodes_from_toKeyList (t : Tree α) : t.num_nodes = t.toKeyList.length := by
+lemma num_nodes_eq_length_toKeyList (t : Tree α) : t.num_nodes = t.toKeyList.length := by
   induction t with
   | nil => simp
   | node v l r lih rih => simp [lih, rih]; omega
@@ -382,7 +382,7 @@ theorem gt_of_IsBST_right [LinearOrder α] (l : Tree α) (k : α) (r : Tree α)
   exact IsBSTAux.gt_of_mem_lb hr hqr
 
 /-- A tree that contains something is not nil. -/
-theorem nonnil_of_mem {t : Tree α} (q : α) (hq : q ∈ t) : (t ≠ nil) := by
+theorem ne_nil_of_mem {t : Tree α} (q : α) (hq : q ∈ t) : (t ≠ nil) := by
   by_contra
   have : q ∉ t := by rw [this]; exact not_mem_nil q
   contradiction

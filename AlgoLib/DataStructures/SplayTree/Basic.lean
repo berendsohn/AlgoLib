@@ -56,7 +56,7 @@ def applyChild (d : Dir) (op : Tree α → Tree α) : Tree α → Tree α
     | .R => l △[k] (op r)
   | .nil => .nil
 
-lemma Dir.applyChild_ne_nil_of_ne_nil (d : Dir) (op : Tree α → Tree α) (t : Tree α) (ht : t ≠ nil) :
+lemma applyChild_ne_nil_of_ne_nil (d : Dir) (op : Tree α → Tree α) (t : Tree α) (ht : t ≠ nil) :
     applyChild d op t ≠ nil := by
   unfold applyChild; split
   · split; all_goals simp
