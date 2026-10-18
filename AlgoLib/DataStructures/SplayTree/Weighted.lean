@@ -369,23 +369,20 @@ theorem φ_splayUp (hw : FnLbOne w) (c : Tree α) (hc : c ≠ nil) (path : List 
     | nil =>
       contradiction
     | node a l r =>
-      rw [splayUp_cons_cons]; simp only [List.length_cons]
+      rw [splayUp_cons_cons]; simp only [List.length_cons, reassemble_cons]; push_cast
+      set s := f2.attach (f1.attach (node a l r))
       split_ifs with hdir
-      · set s := f2.attach (f1.attach (node a l r))
-        set step_tree := f2.dir.bringUp (f2.dir.bringUp s)
+      · set step_tree := f2.dir.bringUp (f2.dir.bringUp s)
         have hsize : size w step_tree = size w s := by
           simp [step_tree]
-        simp only [reassemble_cons]; push_cast
         have : step_tree ≠ nil := by
           unfold step_tree; apply Dir.bringUp_ne_nil_of_ne_nil; apply Dir.bringUp_ne_nil_of_ne_nil
           unfold s; apply Frame.attach_ne_nil
         nlinarith [ih step_tree this,
           φ_reassemble_congr rest hsize.symm, φ_zigzig hw a l r f1 f2 hdir]
-      · set s := f2.attach (f1.attach (node a l r))
-        set step_tree := f2.dir.bringUp (applyChild f2.dir f1.dir.bringUp s)
+      · set step_tree := f2.dir.bringUp (applyChild f2.dir f1.dir.bringUp s)
         have hsize : size w step_tree = size w s := by
           simp [step_tree]
-        simp only [reassemble_cons]; push_cast
         have : step_tree ≠ nil := by
           unfold step_tree; apply Dir.bringUp_ne_nil_of_ne_nil;
           apply applyChild_ne_nil_of_ne_nil
