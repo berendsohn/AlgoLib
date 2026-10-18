@@ -277,9 +277,7 @@ theorem φ_zigzig (hw : FnLbOne w) (a : α) (l r : Tree α) (f1 f2 : Frame α)
   · exact φ_zigzig_left hw a k1 k2 l r n1 n2
   · have h := φ_zigzig_left hw a k1 k2 r.mirror l.mirror n1.mirror n2.mirror
     simp only [Frame.attach, Dir.bringUp, rotateRight, rotateLeft] at h ⊢
-    repeat rw [← mirror] at h
-    simp only [φ_mirror, rank_mirror] at h
-    assumption
+    simpa only [← mirror_node, φ_mirror, rank_mirror] using h
 
 private theorem φ_zigzag_left (hw : FnLbOne w)
     (a b c : α) (t1 t2 t3 t4 : Tree α) :
@@ -328,9 +326,7 @@ theorem φ_zigzag (hw : FnLbOne w) (a : α) (l r : Tree α) (f1 f2 : Frame α)
   · exact φ_zigzag_left hw k2 a k1 n2 l r n1
   · have h := φ_zigzag_left hw k2 a k1 n2.mirror r.mirror l.mirror n1.mirror
     simp only [Frame.attach, Dir.bringUp, rotateRight, rotateLeft, applyChild] at h ⊢
-    repeat rw [← mirror] at h
-    simp only [φ_mirror, rank_mirror] at h
-    assumption
+    simpa only [← mirror_node, φ_mirror, rank_mirror] using h
 
 
 /-! #### Telescoping: potential change along the full splayUp -/
