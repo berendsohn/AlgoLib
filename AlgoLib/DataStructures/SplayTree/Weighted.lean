@@ -40,11 +40,9 @@ def FnPos (w : α → ℝ) : Prop :=
 def FnNonneg (w : α → ℝ) : Prop :=
   ∀ x, 0 ≤ w x
 
-lemma FnPos_of_FnLbOne {w : α → ℝ} (h : FnLbOne w) : (FnPos w) := by
-  intro x; linarith [h x]
+lemma FnPos_of_FnLbOne {w : α → ℝ} (h : FnLbOne w) : (FnPos w) := fun x => one_pos.trans_le (h x)
 
-lemma FnNonneg_of_FnPos {w : α → ℝ} (h : FnPos w) : (FnNonneg w) := by
-  intro x; linarith [h x]
+lemma FnNonneg_of_FnPos {w : α → ℝ} (h : FnPos w) : (FnNonneg w) := fun x => (h x).le
 
 lemma FnNonneg_of_FnLbOne {w : α → ℝ} (h : FnLbOne w) : (FnNonneg w) := by
   intro x; linarith [h x]
@@ -72,9 +70,9 @@ variable {w : α → ℝ}
 
 /-! #### Basic size lemmas -/
 
-@[simp] lemma size_empty : size w (.nil : Tree α) = 0 := by simp only [size]
+@[simp] lemma size_empty : size w (.nil : Tree α) = 0 := rfl
 @[simp] lemma size_node {v : α} {l r : Tree α} : size w (node v l r) = w v + size w l + size w r :=
-  by simp only [size]
+  rfl
 
 @[simp] theorem size_rotateRight (t : Tree α) :
     size w (rotateRight t) = size w t := by
@@ -88,10 +86,8 @@ variable {w : α → ℝ}
 
 lemma size_nonneg (hw : FnNonneg w) (t : Tree α) : 0 ≤ size w t := by
   induction t with
-  | nil => simp [size_empty]
-  | node v l r =>
-    unfold size
-    linarith [hw v]
+  | nil => rfl
+  | node v l r ihl ihr => exact add_nonneg (add_nonneg (hw v) ihl) ihr
 
 private lemma size_nonneg' (hw : FnPos w) (t : Tree α) : 0 ≤ size w t :=
   size_nonneg (FnNonneg_of_FnPos hw) t
@@ -100,9 +96,8 @@ private lemma size_nonneg'' (hw : FnLbOne w) (t : Tree α) : 0 ≤ size w t :=
   size_nonneg (FnNonneg_of_FnLbOne hw) t
 
 lemma size_ge_root_value (hw : FnNonneg w) (v : α) (l r : Tree α) :
-    w v ≤ size w (node v l r) := by
-  unfold size
-  linarith [size_nonneg hw l, size_nonneg hw r]
+    w v ≤ size w (node v l r) :=
+  le_add_of_le_of_nonneg (le_add_of_nonneg_right (size_nonneg hw l)) (size_nonneg hw r)
 
 lemma size_ge_left_child (hw : FnNonneg w) (v : α) (l r : Tree α) :
     size w l ≤ size w (node v l r) := by
@@ -113,35 +108,21 @@ lemma size_ge_right_child (hw : FnNonneg w) (v : α) (l r : Tree α) :
   simp [size_node]; linarith [hw v, size_nonneg hw l]
 
 lemma size_pos_of_non_nil (hw : FnPos w) (t : Tree α) (h : t ≠ nil) : 0 < size w t := by
-  cases t with
-  | nil => by_contra; apply h; rfl
-  | node v l r =>
-    linarith [hw v, size_ge_root_value (FnNonneg_of_FnPos hw) v l r]
+  obtain ⟨l, v, r, rfl⟩ := non_empty_exist t h
+  exact (hw v).trans_le (size_ge_root_value (FnNonneg_of_FnPos hw) v l r)
 
 lemma size_from_toKeyList (t : Tree α) :
     size w t = (t.toKeyList.map w).sum := by
   induction t <;> simp [*]; ring
 
-lemma size_zero_iff_empty (hw : FnPos w) (t : Tree α) : size w t = 0 ↔ t = nil := by
-  constructor
-  · unfold size
-    cases t with
-    | nil => intro h; rfl
-    | node v l r =>
-      simp only [reduceCtorEq, imp_false]
-      linarith [size_nonneg' hw l, size_nonneg' hw r, hw v]
-  · intro h; simp [h]
+lemma size_zero_iff_empty (hw : FnPos w) (t : Tree α) : size w t = 0 ↔ t = nil :=
+  ⟨not_imp_not.mp fun ht => (size_pos_of_non_nil hw t ht).ne', fun h => h ▸ rfl⟩
 
 lemma size_le_size_of_toKeyList_Sublist (hw : FnNonneg w)
     {s t : Tree α} (h : s.toKeyList.Sublist t.toKeyList) :
     size w s ≤ size w t := by
   rw [size_from_toKeyList, size_from_toKeyList]
-  apply List.Sublist.sum_le_sum
-  · exact List.Sublist.map w h
-  · intro x hx
-    have := List.mem_map.mp hx
-    rcases this with ⟨y, _, hy⟩
-    rw [←hy]; exact hw y
+  exact (h.map w).sum_le_sum (List.forall_mem_map.mpr fun x _ => hw x)
 
 /-! #### Splay-tree-related size lemmas -/
 
@@ -165,17 +146,14 @@ lemma size_Frame_attach (s : Tree α) (f : Frame α) :
 
 /-! #### Basic rank lemmas -/
 
-@[simp] lemma rank_empty : rank w (.nil : Tree α) = 0 :=
-  by simp [rank]
+@[simp] lemma rank_empty : rank w (.nil : Tree α) = 0 := rfl
 
 lemma rank_nonneg (hw : FnLbOne w) (t : Tree α) : 0 ≤ rank w t := by
-  unfold rank; cases t with
-  | nil => simp
+  cases t with
+  | nil => rfl
   | node v l r =>
-    simp only [size_node]
-    have : w v + size w l + size w r ≥ 1 := by
-      linarith [hw v, size_nonneg'' hw l, size_nonneg'' hw r]
-    exact Real.logb_nonneg (show 1 < (2 : ℝ) by simp) this
+    exact Real.logb_nonneg one_lt_two
+      ((hw v).trans (size_ge_root_value (FnNonneg_of_FnLbOne hw) v l r))
 
 lemma rank_le_of_size_le (hw : FnLbOne w) (s t : Tree α) (h : size w s ≤ size w t) :
     rank w s ≤ rank w t := by
@@ -219,7 +197,7 @@ lemma rank_eq_of_toKeyList_eq {s t : Tree α}
 lemma φ_nonneg (hw : FnLbOne w) (t : Tree α) : 0 ≤ φ w t := by
   induction t with
   | nil => rfl
-  | node k l r => simp [φ]; linarith [rank_nonneg hw (l △[k] r), φ_nonneg hw l, φ_nonneg hw r]
+  | node k l r ihl ihr => exact add_nonneg (add_nonneg (rank_nonneg hw _) ihl) ihr
 
 
 /-! #### Potential of subtrees versus the whole tree -/
@@ -234,16 +212,12 @@ theorem φ_le_attach (hw : FnLbOne w) (c : Tree α) (f : Frame α) :
 theorem φ_le_reassemble (hw : FnLbOne w) (c : Tree α) (path : List (Frame α)) :
     φ w c ≤ φ w (reassemble c path) := by
   induction path generalizing c with
-  | nil => simp
-  | cons f rest ih => simp only [reassemble_cons]; exact le_trans (φ_le_attach hw c f) (ih _)
+  | nil => rfl
+  | cons f rest ih => exact (φ_le_attach hw c f).trans (ih _)
 
 theorem φ_descend_subtree_le [LinearOrder α] (hw : FnLbOne w) (t : Tree α) (q : α) :
-    φ w (descend t q).1 ≤ φ w t := by
-  have h := descend_preserves_tree t q
-  calc φ w (descend t q).1
-      ≤ φ w (reassemble (descend t q).1 (descend t q).2) :=
-        φ_le_reassemble hw _ _
-    _ = φ w t := by rw [h]
+    φ w (descend t q).1 ≤ φ w t :=
+  (φ_le_reassemble hw _ _).trans_eq (congrArg (φ w) (descend_preserves_tree t q))
 
 
 /-! #### Mirror preserves rank and potential -/
@@ -405,10 +379,7 @@ lemma φ_reassemble_congr {s s' : Tree α} (path : List (Frame α))
     φ w (reassemble s' path) - φ w (reassemble s path) = φ w s' - φ w s := by
   induction path generalizing s s' with
   | nil => simp
-  | cons f rest ih =>
-    simp only [reassemble_cons]
-    rw [ih (by simp [size_Frame_attach, h])]
-    exact φ_attach_congr f h
+  | cons f rest ih => exact (ih (by simp [size_Frame_attach, h])).trans (φ_attach_congr f h)
 
 /-- The total potential change of splayUp plus the path length is at
     most 3 × the rank increase + 1. -/
@@ -517,11 +488,9 @@ theorem total_cost_bound {S : Type*} (m : ℕ)
     (hamort : ∀ i : Fin m,
       Φ (s i.succ) - Φ (s i.castSucc) + cost i ≤ B i) :
     ∑ i : Fin m, cost i ≤ ∑ i : Fin m, (B i) + Φ (s 0) - Φ (s (Fin.last m)) := by
-  have := Finset.sum_le_sum fun i (_ : i ∈ Finset.univ) =>
-    hamort i
-  simp_all +decide only [Finset.sum_add_distrib, Finset.sum_sub_distrib, ge_iff_le]
-  linarith! [Fin.sum_univ_castSucc fun i => Φ (s i),
-    Fin.sum_univ_succ fun i => Φ (s i)]
+  have := Fintype.sum_mono hamort
+  simp only [Finset.sum_add_distrib, Finset.sum_sub_distrib] at this
+  linarith [Fin.sum_univ_castSucc fun i => Φ (s i), Fin.sum_univ_succ fun i => Φ (s i)]
 
 /-- Sequence version of `splay_access_lemma`. -/
 theorem splay_total_weighted_cost' [LinearOrder α]
@@ -660,26 +629,12 @@ theorem splay_total_weighted_cost_lb [LinearOrder α]
     _ ≤ ∑ x, (3 * Real.logb 2 (size w (t 0) / (w (q x))) + 1)
       + φ w (t 0) - φ w (t (Fin.last m)) := by simp [this]
 
-private lemma fn_lb_finset_of_FnPos {w : α → ℝ} (hw : FnPos w) (xs : Finset α) :
-    ∃ ε > 0, ∀ x ∈ xs, ε ≤ w x := by
-  classical
-  induction xs using Finset.induction with
-  | empty => use 1; simp
-  | insert x xs hx hε =>
-    rcases hε with ⟨ε, hpos, h⟩
-    use min ε (w x); constructor
-    · exact lt_min hpos (hw x)
-    · intro y hy
-      simp only [Finset.mem_insert] at hy; rcases hy with hy | hy
-      · rw [hy]; exact Std.min_le_right
-      · have : min ε (w x) ≤ ε := by exact Std.min_le_left
-        linarith [h y hy]
-
 theorem FnLb_of_Finite_of_FnPos {w : α → ℝ} [Finite α] (hw : FnPos w) :
     ∃ ε > 0, FnLb ε w := by
-  have := Fintype.ofFinite α
-  rcases fn_lb_finset_of_FnPos hw Finset.univ with ⟨ε, hpos, h⟩
-  exact ⟨ε, hpos, fun x => h x (Finset.mem_univ x)⟩
+  cases isEmpty_or_nonempty α
+  · exact ⟨1, one_pos, isEmptyElim⟩
+  · obtain ⟨x, hx⟩ := Finite.exists_min w
+    exact ⟨w x, hw x, hx⟩
 
 /-- Version of `splay_total_weighted_cost'` for arbitrary positive weight functions on finite types.
 -/

@@ -24,14 +24,11 @@ private noncomputable def staticWeight [LinearOrder α] (s : Tree α) (q : α) :
   3 ^ (s.num_nodes - search_path_len s q : ℝ)
 
 private lemma staticWeight_ge_one [LinearOrder α] (s : Tree α) (q : α) :
-    staticWeight s q ≥ 1 := by
-  simp only [staticWeight, ge_iff_le]; rw [← Real.rpow_zero 3]
-  apply Real.rpow_le_rpow_of_exponent_le
-  · simp
-  · simp; linarith [search_path_len_le_num_nodes s q]
+    staticWeight s q ≥ 1 :=
+  Real.one_le_rpow (by norm_num) (sub_nonneg.mpr (mod_cast search_path_len_le_num_nodes s q))
 
-private lemma staticWeight_pos [LinearOrder α] (s : Tree α) (q : α) : staticWeight s q > 0 := by
-  simp [FnPos_of_FnLbOne (staticWeight_ge_one s) q]
+private lemma staticWeight_pos [LinearOrder α] (s : Tree α) (q : α) : staticWeight s q > 0 :=
+  FnPos_of_FnLbOne (staticWeight_ge_one s) q
 
 private lemma search_path_len_left [LinearOrder α] (v : α) (l r : Tree α) (q : α) (hqv : q < v) :
     search_path_len (node v l r) q = 1 + search_path_len l q := by
@@ -141,10 +138,9 @@ private lemma staticWeight_size_self_ub [LinearOrder α] (s : Tree α) (hbst : s
 
 private lemma staticWeight_size_ub [LinearOrder α] (s t : Tree α)
     (hst : t.toKeyList.Sublist s.toKeyList) (hbst : s.IsBST) :
-    size (staticWeight s) t ≤ 3 ^ s.num_nodes := by
-  have := size_le_size_of_toKeyList_Sublist (FnNonneg_of_FnPos (staticWeight_pos s)) hst
-  have := staticWeight_size_self_ub s hbst
-  linarith
+    size (staticWeight s) t ≤ 3 ^ s.num_nodes :=
+  (size_le_size_of_toKeyList_Sublist (FnNonneg_of_FnPos (staticWeight_pos s)) hst).trans
+    (staticWeight_size_self_ub s hbst)
 
 private lemma staticWeight_rank_ub [LinearOrder α] (s t : Tree α)
     (hst : t.toKeyList.Sublist s.toKeyList) (hbst : s.IsBST) :

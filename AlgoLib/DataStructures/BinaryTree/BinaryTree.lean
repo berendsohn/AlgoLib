@@ -352,21 +352,17 @@ theorem contains_iff_mem [LinearOrder α] {t : Tree α} (hbst : IsBST t) {q : α
 
 /-- For BSTs, all keys in the left subtree are smaller than the root key. -/
 theorem lt_of_IsBST_left [LinearOrder α] (l : Tree α) (k : α) (r : Tree α)
-    (hbst : IsBST (l △[k] r)) {q : α} (hql : q ∈ l) : q < k := by
-  simp only [IsBST_node] at hbst; rcases hbst with ⟨hl, _⟩
-  exact IsBSTAux.lt_of_mem_ub hl hql
+    (hbst : IsBST (l △[k] r)) {q : α} (hql : q ∈ l) : q < k :=
+  IsBSTAux.lt_of_mem_ub ((IsBST_node l k r).mp hbst).1 hql
 
 /-- For BSTs, all keys in the right subtree are greater than the root key. -/
 theorem gt_of_IsBST_right [LinearOrder α] (l : Tree α) (k : α) (r : Tree α)
-    (hbst : IsBST (l △[k] r)) {q : α} (hqr : q ∈ r) : k < q := by
-  simp only [IsBST_node] at hbst; rcases hbst with ⟨_, hr⟩
-  exact IsBSTAux.gt_of_mem_lb hr hqr
+    (hbst : IsBST (l △[k] r)) {q : α} (hqr : q ∈ r) : k < q :=
+  IsBSTAux.gt_of_mem_lb ((IsBST_node l k r).mp hbst).2 hqr
 
 /-- A tree that contains something is not nil. -/
-theorem ne_nil_of_mem {t : Tree α} (q : α) (hq : q ∈ t) : (t ≠ nil) := by
-  by_contra
-  have : q ∉ t := by rw [this]; exact not_mem_nil q
-  contradiction
+theorem ne_nil_of_mem {t : Tree α} (q : α) (hq : q ∈ t) : t ≠ nil := by
+  rintro rfl; exact not_mem_nil q hq
 
 end BSTMembership
 
