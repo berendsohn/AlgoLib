@@ -488,37 +488,33 @@ theorem splay_total_weighted_cost' [LinearOrder α]
     ∑ i : Fin m, (splay.cost (t i.castSucc) (q i) : ℝ) ≤
     ∑ i : Fin m, (3 * Real.logb 2 (size w (t 0) / w (q i)) + 1) +
       φ w (t 0) - φ w (t (Fin.last m)) := by
-  cases m with
-  | zero => simp
-  | succ m' =>
-    let m := m'+1
-    let B := fun i => (3 * Real.logb 2 (size w (t 0) / w (q i)) + 1)
-    have hbst' : ∀ i : Fin (m+1), (t i).IsBST := by
-      intro i
-      induction i using Fin.induction with
-      | zero => exact hbst
-      | succ i ih => rw [hseq i]; apply IsBST_splay; exact ih
-    have hcont' : ∀ (i : Fin m) (j : Fin (m+1)), (q i) ∈ (t j) := by
-      intro i j
-      induction j using Fin.induction with
-      | zero => apply hcont
-      | succ j jh =>
-        rw [hseq j]
-        apply mem_iff_mem_toKeyList.mpr; simp only [toKeyList_splay]; apply mem_iff_mem_toKeyList.mp
-        exact jh
-    have hsize : ∀ i : Fin (m+1), size w (t i) = size w (t 0) := by
-      intro i
-      induction i using Fin.induction with
-      | zero => rfl
-      | succ i ih => rw [hseq, size_splay]; exact ih
-    apply total_cost_bound m t (fun i => (splay.cost (t i.castSucc) (q i) : ℝ)) (φ w) B
+  let B := fun i => (3 * Real.logb 2 (size w (t 0) / w (q i)) + 1)
+  have hbst' : ∀ i : Fin (m+1), (t i).IsBST := by
     intro i
-    rw [hseq i]
-    have hb := splay_access_lemma hw (t i.castSucc) (q i) (hbst' i.castSucc) (hcont' i i.castSucc)
-    calc φ w (splay (t i.castSucc) (q i)) - φ w (t i.castSucc) +
-          splay.cost (t i.castSucc) (q i)
-      ≤ 3 * Real.logb 2 (size w (t i.castSucc) / w (q i)) + 1 := hb
-    _ ≤ 3 * Real.logb 2 (size w (t 0) / w (q i)) + 1 := by rw [hsize i.castSucc]
+    induction i using Fin.induction with
+    | zero => exact hbst
+    | succ i ih => rw [hseq i]; apply IsBST_splay; exact ih
+  have hcont' : ∀ (i : Fin m) (j : Fin (m+1)), (q i) ∈ (t j) := by
+    intro i j
+    induction j using Fin.induction with
+    | zero => apply hcont
+    | succ j jh =>
+      rw [hseq j]
+      apply mem_iff_mem_toKeyList.mpr; simp only [toKeyList_splay]; apply mem_iff_mem_toKeyList.mp
+      exact jh
+  have hsize : ∀ i : Fin (m+1), size w (t i) = size w (t 0) := by
+    intro i
+    induction i using Fin.induction with
+    | zero => rfl
+    | succ i ih => rw [hseq, size_splay]; exact ih
+  apply total_cost_bound m t (fun i => (splay.cost (t i.castSucc) (q i) : ℝ)) (φ w) B
+  intro i
+  rw [hseq i]
+  have hb := splay_access_lemma hw (t i.castSucc) (q i) (hbst' i.castSucc) (hcont' i i.castSucc)
+  calc φ w (splay (t i.castSucc) (q i)) - φ w (t i.castSucc) +
+        splay.cost (t i.castSucc) (q i)
+    ≤ 3 * Real.logb 2 (size w (t i.castSucc) / w (q i)) + 1 := hb
+  _ ≤ 3 * Real.logb 2 (size w (t 0) / w (q i)) + 1 := by rw [hsize i.castSucc]
 
 /-- Simplified version of `splay_total_weighted_cost'` using a general tree potential upper bound.
 -/

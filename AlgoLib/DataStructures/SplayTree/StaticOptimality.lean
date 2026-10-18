@@ -197,44 +197,37 @@ theorem splay_tree_static_optimality [LinearOrder α] (m : ℕ)
     let n := s.num_nodes
     splay.sequence_cost init X ≤ m + (Real.logb 2 3) * (3 * staticCost s X + n ^ 2) := by
   have hsbst : s.IsBST := IsBST_of_toKeyList_eq hkeys hinitbst
-  by_cases hinit : init = nil
-  · have : s = nil := by apply eq_nil_of_toKeyList_eq_nil; simp [hkeys, hinit]
-    have hsnc : s.num_nodes = 0 := by simp [this]
-    cases m with
-    | zero => simp [hsnc, splay.sequence_cost]
-    | succ m =>
-      have : init ≠ nil := ne_nil_of_mem (X (Fin.last m)) (hX (Fin.last m))
-      contradiction
-  · have hφ_ub : (∀ (t : Tree α), t.toKeyList = init.toKeyList
-        → φ (staticWeight s) t ≤ ↑s.num_nodes ^ 2 * Real.logb 2 3) := by
-      intro t h; apply staticWeight_φ_ub
-      · simp [h, hkeys]
-      · exact hsbst
-    have hbound := splay_total_weighted_cost (staticWeight_ge_one s) m init hinitbst hφ_ub X hX
-    have hsize_ub := staticWeight_size_ub s init (by simp [hkeys]) hsbst
-    apply le_trans hbound
-    simp only [staticCost, Nat.cast_sum]
-    rw [mul_comm 3, Finset.sum_mul]
-    have : (m : ℝ) = ∑ i : Fin m, 1 := by simp
-    rw [this, mul_comm (Real.logb 2 3)]
-    rw [add_mul, Finset.sum_mul, ← add_assoc, ← Finset.sum_add_distrib]
-    simp only [add_comm]
-    gcongr 3 with i
-    calc 3 * Real.logb 2 (size (staticWeight s) init / staticWeight s (X i)) ≤
-      3 * Real.logb 2 (3 ^ (s.num_nodes : ℝ) / staticWeight s (X i)) := by
-          have hpos := staticWeight_pos s (X i)
-          simp only [Real.rpow_natCast, Nat.ofNat_pos, mul_le_mul_iff_right₀, ge_iff_le]
-          apply Real.logb_le_logb_of_le (by norm_num)
-          · apply div_pos (size_pos_of_non_nil (staticWeight_pos s) init hinit) hpos
-          · exact (div_le_div_iff_of_pos_right hpos).mpr hsize_ub
-      _ = 3 * Real.logb 2 (3 ^ (s.search_path_len (X i) : ℝ)) := by
-        simp only [staticWeight]; congr; field_simp
-        rw [← Real.rpow_add (show 0 < 3 by simp)]
-        congr; linarith
-      _ ≤ (s.search_path_len (X i) * 3 * Real.logb 2 3 : ℝ) := by
-        rw [mul_comm]
-        rw [Real.logb_rpow_eq_mul_logb_of_pos (by simp)]
-        linarith
+  have hφ_ub : (∀ (t : Tree α), t.toKeyList = init.toKeyList
+      → φ (staticWeight s) t ≤ ↑s.num_nodes ^ 2 * Real.logb 2 3) := by
+    intro t h; apply staticWeight_φ_ub
+    · simp [h, hkeys]
+    · exact hsbst
+  have hbound := splay_total_weighted_cost (staticWeight_ge_one s) m init hinitbst hφ_ub X hX
+  have hsize_ub := staticWeight_size_ub s init (by simp [hkeys]) hsbst
+  apply le_trans hbound
+  simp only [staticCost, Nat.cast_sum]
+  rw [mul_comm 3, Finset.sum_mul]
+  have : (m : ℝ) = ∑ i : Fin m, 1 := by simp
+  rw [this, mul_comm (Real.logb 2 3)]
+  rw [add_mul, Finset.sum_mul, ← add_assoc, ← Finset.sum_add_distrib]
+  simp only [add_comm]
+  gcongr 3 with i
+  calc 3 * Real.logb 2 (size (staticWeight s) init / staticWeight s (X i)) ≤
+    3 * Real.logb 2 (3 ^ (s.num_nodes : ℝ) / staticWeight s (X i)) := by
+        have hpos := staticWeight_pos s (X i)
+        have hinit : init ≠ nil := ne_nil_of_mem (X i) (hX i)
+        simp only [Real.rpow_natCast, Nat.ofNat_pos, mul_le_mul_iff_right₀, ge_iff_le]
+        apply Real.logb_le_logb_of_le (by norm_num)
+        · apply div_pos (size_pos_of_non_nil (staticWeight_pos s) init hinit) hpos
+        · exact (div_le_div_iff_of_pos_right hpos).mpr hsize_ub
+    _ = 3 * Real.logb 2 (3 ^ (s.search_path_len (X i) : ℝ)) := by
+      simp only [staticWeight]; congr; field_simp
+      rw [← Real.rpow_add (show 0 < 3 by simp)]
+      congr; linarith
+    _ ≤ (s.search_path_len (X i) * 3 * Real.logb 2 3 : ℝ) := by
+      rw [mul_comm]
+      rw [Real.logb_rpow_eq_mul_logb_of_pos (by simp)]
+      linarith
 
 end Weighted
 
