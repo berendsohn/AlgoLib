@@ -55,14 +55,10 @@ def toKeyList : Tree α → List α
     (l △[k] r).toKeyList = l.toKeyList ++ [k] ++ r.toKeyList := rfl
 
 lemma eq_nil_of_toKeyList_eq_nil {t : Tree α} (h : toKeyList t = []) : t = nil := by
-  cases t
-  · simp
-  · simp [List.append_assoc] at h
+  cases t <;> simp_all
 
 lemma num_nodes_eq_length_toKeyList (t : Tree α) : t.num_nodes = t.toKeyList.length := by
-  induction t with
-  | nil => simp
-  | node v l r lih rih => simp [lih, rih]; omega
+  induction t <;> simp_all; omega
 
 /-- Number of nodes on the search path for `q` in `t`. Zero on the empty
 tree; on a node this counts the root plus (if `q ≠ k`) the search path
@@ -80,9 +76,7 @@ def search_path_len [LinearOrder α] (t : Tree α) (q : α) : ℕ :=
 
 lemma search_path_len_le_num_nodes [LinearOrder α] (t : Tree α) (q : α) :
     search_path_len t q ≤ t.num_nodes := by
-  induction t with
-  | nil => simp [search_path_len]
-  | node v l r ihl ihr => simp [search_path_len]; split_ifs; all_goals omega
+  induction t <;> simp [search_path_len]; split_ifs <;> omega
 
 /--
 Remark:
@@ -286,30 +280,17 @@ section IsBSTAccessors
     IsBST (l △[k] r) ↔ IsBSTAux l none (some k) ∧ IsBSTAux r (some k) none := by
   simp [IsBST, IsBSTAux_node]
 
-private lemma IsBSTAux_children_none [LinearOrder α] (t : Tree α) (x y : Option α)
-    (h : IsBSTAux t x y) : IsBSTAux t none y ∧ IsBSTAux t x none ∧ IsBSTAux t none none := by
-  induction t generalizing x y with
-  | nil => simp
-  | node k l r lih rih =>
-    simp only [IsBSTAux_node] at h
-    rcases h with ⟨_, _, h1, h2⟩
-    rcases lih x (some k) h1 with ⟨_, _, _⟩
-    rcases rih (some k) y h2 with ⟨_, _, _⟩
-    simp only [IsBSTAux_node, Option.elim_none, true_and]; split_ands; all_goals assumption
-
-private lemma IsBST_of_IsBSTAux [LinearOrder α] {t : Tree α} {x y : Option α}
-    (h : IsBSTAux t x y) : IsBST t := by
-  unfold IsBST; rcases IsBSTAux_children_none t x y h with ⟨_, _, _⟩; assumption
+private lemma IsBSTAux_children_none [LinearOrder α] {t : Tree α} {x y : Option α}
+    (h : IsBSTAux t x y) : IsBSTAux t none y ∧ IsBSTAux t x none := by
+  induction h <;> simp_all
 
 theorem IsBST_left_of_IsBST [LinearOrder α] {k : α} {l r : Tree α}
-    (hbst : IsBST (l △[k] r)) : IsBST l := by
-  simp only [IsBST, IsBSTAux_node, Option.elim_none, true_and] at hbst; rcases hbst with ⟨hl, _⟩
-  exact IsBST_of_IsBSTAux hl
+    (hbst : IsBST (l △[k] r)) : IsBST l :=
+  (IsBSTAux_children_none ((IsBST_node l k r).mp hbst).1).2
 
 theorem IsBST_right_of_IsBST [LinearOrder α] {k : α} {l r : Tree α}
-    (hbst : IsBST (l △[k] r)) : IsBST r := by
-  simp only [IsBST, IsBSTAux_node, Option.elim_none, true_and] at hbst; rcases hbst with ⟨_, hr⟩
-  exact IsBST_of_IsBSTAux hr
+    (hbst : IsBST (l △[k] r)) : IsBST r :=
+  (IsBSTAux_children_none ((IsBST_node l k r).mp hbst).2).1
 
 end IsBSTAccessors
 

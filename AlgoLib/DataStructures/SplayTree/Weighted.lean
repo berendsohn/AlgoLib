@@ -120,11 +120,7 @@ lemma size_pos_of_non_nil (hw : FnPos w) (t : Tree α) (h : t ≠ nil) : 0 < siz
 
 lemma size_from_toKeyList (t : Tree α) :
     size w t = (t.toKeyList.map w).sum := by
-  induction t with
-  | nil => simp [size, toKeyList]
-  | node a l r =>
-    simp [size, toKeyList]
-    linarith
+  induction t <;> simp [*]; ring
 
 lemma size_zero_iff_empty (hw : FnPos w) (t : Tree α) : size w t = 0 ↔ t = nil := by
   constructor
@@ -158,14 +154,11 @@ theorem size_bringUp (d : Dir) (t : Tree α) :
 theorem size_applyChild (d : Dir) (op : Tree α → Tree α)
     (hop : ∀ s, size w (op s) = size w s) (t : Tree α) :
     size w (applyChild d op t) = size w t := by
-  cases t with
-  | nil => rfl
-  | node k l r => cases d <;> simp [applyChild, hop]
+  cases t <;> cases d <;> simp [applyChild, hop]
 
 lemma size_Frame_attach (s : Tree α) (f : Frame α) :
     size w (f.attach s) = size w s + w f.key + size w f.sibling := by
-  simp [Frame.attach]
-  cases f.dir; all_goals simp; linarith
+  rcases f with ⟨_ | _, k, sib⟩ <;> simp only [Frame.attach, size_node] <;> ring
 
 @[simp] lemma size_splay [LinearOrder α] (s : Tree α) (q : α) : size w (splay s q) = size w s := by
   rw [size_from_toKeyList, size_from_toKeyList]; rw [toKeyList_splay]
