@@ -30,6 +30,12 @@ private lemma staticWeight_ge_one [LinearOrder α] (s : Tree α) (q : α) :
 private lemma staticWeight_pos [LinearOrder α] (s : Tree α) (q : α) : staticWeight s q > 0 :=
   FnPos_of_FnLbOne (staticWeight_ge_one s) q
 
+/-- If two weight functions differ by a constant factor on the keys of `t`, so do the sizes. -/
+private lemma size_eq_mul_size {w w' : α → ℝ} {c : ℝ} {t : Tree α}
+    (h : ∀ x ∈ t.toKeyList, w x = c * w' x) : size w t = c * size w' t := by
+  rw [size_from_toKeyList, size_from_toKeyList, ← List.sum_map_mul_left]
+  exact congrArg List.sum (List.map_congr_left h)
+
 private lemma search_path_len_left [LinearOrder α] (v : α) (l r : Tree α) (q : α) (hqv : q < v) :
     search_path_len (node v l r) q = 1 + search_path_len l q := by
   simp [search_path_len, hqv]
@@ -47,22 +53,10 @@ private lemma staticWeight_size_left [LinearOrder α]
     let s := node v l r
     size (staticWeight s) l =
       3 ^ (s.num_nodes - l.num_nodes - 1 : ℝ) * size (staticWeight l) l := by
-  simp only [size_from_toKeyList]
-  have hlv : ∀ x ∈ l.toKeyList, x < v := by
-    intro x hx
-    apply lt_of_IsBST_left l v r hbst
-    exact mem_iff_mem_toKeyList.mpr hx
-  have : ∀ xs, xs.Sublist l.toKeyList → (List.map (staticWeight (l △[v] r)) xs).sum =
-      3 ^ ((l △[v] r).num_nodes - ↑l.num_nodes - 1 : ℝ) * (List.map (staticWeight l) xs).sum := by
-    intro xs
-    induction xs with
-    | nil => simp
-    | cons x xs ih =>
-      intro hsub
-      have hxv : x < v := by apply hlv; exact List.mem_of_cons_sublist hsub
-      have := ih (List.sublist_of_cons_sublist hsub)
-      simp [this, staticWeight_left v l r x hxv]; linarith
-  exact this l.toKeyList (by rfl)
+  intro s
+  apply size_eq_mul_size
+  intro x hx
+  exact staticWeight_left v l r x (lt_of_IsBST_left l v r hbst (mem_iff_mem_toKeyList.mpr hx))
 
 private lemma search_path_len_right [LinearOrder α] (v : α) (l r : Tree α) (q : α) (hqv : v < q) :
     search_path_len (node v l r) q = 1 + search_path_len r q := by
@@ -81,22 +75,10 @@ private lemma staticWeight_size_right [LinearOrder α]
     let s := node v l r
     size (staticWeight s) r =
       3 ^ (s.num_nodes - r.num_nodes - 1 : ℝ) * size (staticWeight r) r := by
-  simp only [size_from_toKeyList]
-  have hrv : ∀ x ∈ r.toKeyList, v < x := by
-    intro x hx
-    apply gt_of_IsBST_right l v r hbst
-    exact mem_iff_mem_toKeyList.mpr hx
-  have : ∀ xs, xs.Sublist r.toKeyList → (List.map (staticWeight (l △[v] r)) xs).sum =
-      3 ^ ((l △[v] r).num_nodes - ↑r.num_nodes - 1 : ℝ) * (List.map (staticWeight r) xs).sum := by
-    intro xs
-    induction xs with
-    | nil => simp
-    | cons x xs ih =>
-      intro hsub
-      have hxv : v < x := by apply hrv; exact List.mem_of_cons_sublist hsub
-      have := ih (List.sublist_of_cons_sublist hsub)
-      simp [this, staticWeight_right v l r x hxv]; linarith
-  exact this r.toKeyList (by rfl)
+  intro s
+  apply size_eq_mul_size
+  intro x hx
+  exact staticWeight_right v l r x (gt_of_IsBST_right l v r hbst (mem_iff_mem_toKeyList.mpr hx))
 
 private lemma staticWeight_size_self_ub [LinearOrder α] (s : Tree α) (hbst : s.IsBST) :
     size (staticWeight s) s ≤ 3 ^ s.num_nodes := by

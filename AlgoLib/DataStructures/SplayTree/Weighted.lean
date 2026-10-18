@@ -155,29 +155,19 @@ lemma rank_nonneg (hw : FnLbOne w) (t : Tree α) : 0 ≤ rank w t := by
     exact Real.logb_nonneg one_lt_two
       ((hw v).trans (size_ge_root_value (FnNonneg_of_FnLbOne hw) v l r))
 
+private lemma rank_eq_logb_size (t : Tree α) : rank w t = Real.logb 2 (size w t) := by
+  cases t <;> simp [rank]
+
 lemma rank_le_of_size_le (hw : FnLbOne w) (s t : Tree α) (h : size w s ≤ size w t) :
     rank w s ≤ rank w t := by
-  cases s <;> cases t <;> all_goals try simp only [rank_empty, rank_nonneg hw, le_rfl]
-  · simp only [rank]; simp only [size_empty] at h
-    apply (Real.logb_nonpos_iff' (by simp) ?_).mpr
-    · linarith
-    · apply size_nonneg'' hw
-  · apply Real.logb_le_logb_of_le (by norm_num)
-    · exact size_pos_of_non_nil (FnPos_of_FnLbOne hw) _ (by simp)
-    · linarith [h]
+  rcases eq_or_ne s nil with rfl | hs
+  · exact rank_nonneg hw t
+  · rw [rank_eq_logb_size, rank_eq_logb_size]
+    exact Real.logb_le_logb_of_le one_lt_two (size_pos_of_non_nil (FnPos_of_FnLbOne hw) s hs) h
 
 lemma rank_eq_of_toKeyList_eq {s t : Tree α}
     (h : s.toKeyList = t.toKeyList) : rank w s = rank w t := by
-  simp only [rank]
-  cases s with
-  | nil =>
-    simp only
-    simp only [toKeyList, List.nil_eq] at h
-    rw [size_from_toKeyList, h, List.map_nil, List.sum_nil, eq_nil_of_toKeyList_eq_nil h]
-  | node v l r =>
-    have : t.toKeyList ≠ [] := by rw [←h]; simp
-    have : t ≠ nil := by contrapose this; rw [this]; exact toKeyList_empty
-    simp only; rw [size_from_toKeyList, size_from_toKeyList, h]
+  rw [rank_eq_logb_size, rank_eq_logb_size, size_from_toKeyList, size_from_toKeyList, h]
 
 
 /-! #### Splay-related rank lemmas -/
@@ -221,14 +211,7 @@ theorem φ_descend_subtree_le [LinearOrder α] (hw : FnLbOne w) (t : Tree α) (q
 /-! #### Mirror preserves rank and potential -/
 
 lemma rank_mirror (t : Tree α) : rank w t.mirror = rank w t := by
-  cases t
-  · simp [rank]
-  · simp only [rank, mirror_node, size_from_toKeyList, toKeyList_node, toKeyList_mirror,
-    List.append_assoc, List.cons_append, List.nil_append, List.map_append, List.map_reverse,
-    List.map_cons, List.sum_append, List.sum_reverse, List.sum_cons]
-    apply congr
-    · rfl
-    · linarith
+  simp [rank_eq_logb_size, size_from_toKeyList]
 
 lemma φ_mirror (t : Tree α) : φ w t.mirror = φ w t := by
   induction t with
