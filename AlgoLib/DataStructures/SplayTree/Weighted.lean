@@ -204,10 +204,8 @@ lemma φ_nonneg (hw : FnLbOne w) (t : Tree α) : 0 ≤ φ w t := by
 
 theorem φ_le_attach (hw : FnLbOne w) (c : Tree α) (f : Frame α) :
     φ w c ≤ φ w (f.attach c) := by
-  cases f with | mk d k s =>
-  cases d <;> simp [Frame.attach, φ_node] <;>
-  linarith [rank_nonneg hw (c △[k] s), rank_nonneg hw (s △[k] c),
-  φ_nonneg hw c, φ_nonneg hw s]
+  rcases f with ⟨_ | _, k, s⟩ <;> simp only [Frame.attach, φ_node] <;>
+    linarith [rank_nonneg hw (c △[k] s), rank_nonneg hw (s △[k] c), φ_nonneg hw s]
 
 theorem φ_le_reassemble (hw : FnLbOne w) (c : Tree α) (path : List (Frame α)) :
     φ w c ≤ φ w (reassemble c path) := by
@@ -245,20 +243,13 @@ lemma φ_mirror (t : Tree α) : φ w t.mirror = φ w t := by
 theorem φ_zig (hw : FnLbOne w) (c : Tree α) (f : Frame α) :
     φ w (f.dir.bringUp (f.attach c)) - φ w (f.attach c) ≤
       rank w (f.dir.bringUp (f.attach c)) - rank w c := by
-  rcases f with ⟨d, key, sib⟩
-  rcases c with _ | ⟨k, l, r⟩ <;> cases d <;>
-    all_goals simp only [Dir.bringUp, rotateLeft, rotateRight,
-    Frame.attach, φ_node, φ_empty, add_zero, sub_self, rank_empty, sub_zero]
-  · exact rank_nonneg hw _
-  · exact rank_nonneg hw _
-  · have : rank w (r △[key] sib) ≤ rank w ((l △[k] r) △[key] sib) := by
-      apply rank_le_of_size_le hw
-      simp [size_node]; linarith [hw k, size_nonneg'' hw l]
-    linarith
-  · have : rank w (sib △[key] l) ≤ rank w (sib △[key] (l △[k] r)) := by
-      apply rank_le_of_size_le hw
-      simp [size_node]; linarith [hw k, size_nonneg'' hw l, size_nonneg'' hw r]
-    linarith
+  rcases f with ⟨_ | _, key, sib⟩ <;> rcases c with _ | ⟨k, l, r⟩ <;>
+    simp only [Dir.bringUp, rotateLeft, rotateRight, Frame.attach, φ_node, sub_self, rank_empty,
+      sub_zero, rank_nonneg hw]
+  · linarith [rank_le_of_size_le hw (r △[key] sib) ((l △[k] r) △[key] sib)
+      (by simp; linarith [hw k, size_nonneg'' hw l])]
+  · linarith [rank_le_of_size_le hw (sib △[key] l) (sib △[key] (l △[k] r))
+      (by simp; linarith [hw k, size_nonneg'' hw r])]
 
 private theorem φ_zigzig_left (hw : FnLbOne w)
     (a b c : α) (t1 t2 t3 t4 : Tree α) :
@@ -370,9 +361,7 @@ theorem φ_zigzag (hw : FnLbOne w) (a : α) (l r : Tree α) (f1 f2 : Frame α)
 lemma φ_attach_congr {s s' : Tree α} (f : Frame α)
     (h : size w s = size w s') :
     φ w (f.attach s') - φ w (f.attach s) = φ w s' - φ w s := by
-  cases f with | mk d k sib =>
-  cases d <;> simp only [Frame.attach, φ_node, add_sub_add_right_eq_sub] <;>
-    (unfold rank; simp [h])
+  rcases f with ⟨_ | _, k, sib⟩ <;> simp [Frame.attach, rank, h]
 
 lemma φ_reassemble_congr {s s' : Tree α} (path : List (Frame α))
     (h : size w s = size w s') :
