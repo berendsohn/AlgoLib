@@ -233,7 +233,7 @@ lemma rank_mirror (t : Tree α) : rank w t.mirror = rank w t := by
 lemma φ_mirror (t : Tree α) : φ w t.mirror = φ w t := by
   induction t with
   | nil => rfl
-  | node v r l =>
+  | node v l r =>
     rw [mirror_node, φ_node, φ_node, ← mirror, rank_mirror]
     simp_all; linarith
 
@@ -257,9 +257,7 @@ private theorem φ_zigzig_left (hw : FnLbOne w)
     let s := node c (node b x t3) t4 -- The initial tree
     let s' := rotateRight (rotateRight s) -- The resulting tree
     φ w s' - φ w s + 2 ≤ 3 * (rank w s' - rank w x) := by
-  let x := node a t1 t2
-  let s := node c (node b x t3) t4
-  let s' := rotateRight (rotateRight s)
+  intro x s s'
   let φ_children := φ w t1 + φ w t2 + φ w t3 + φ w t4
   -- Write out the potentials of both trees
   have : φ w s = rank w s + rank w (node b x t3) + rank w x + φ_children := by
@@ -291,7 +289,6 @@ theorem φ_zigzig (hw : FnLbOne w) (a : α) (l r : Tree α) (f1 f2 : Frame α)
     let s := f2.attach (f1.attach c)
     let step := f2.dir.bringUp (f2.dir.bringUp s)
     φ w step - φ w s + 2 ≤ 3 * (rank w step - rank w c) := by
-  let c := node a l r
   rcases f1 with ⟨d, k1, n1⟩; rcases f2 with ⟨_, k2, n2⟩; subst heq
   cases d
   · exact φ_zigzig_left hw a k1 k2 l r n1 n2
@@ -307,9 +304,7 @@ private theorem φ_zigzag_left (hw : FnLbOne w)
     let s := node a t1 (node c x t4) -- The initial tree
     let s' := rotateLeft (applyChild .R rotateRight s) -- The resulting tree
     φ w s' - φ w s + 2 ≤ 3 * (rank w s' - rank w x) := by
-  let x := node b t2 t3 -- The node we're rotating
-  let s := node a t1 (node c x t4) -- The initial tree
-  let s' := rotateLeft (applyChild .R rotateRight s) -- The resulting tree
+  intro x s s'
   let φ_children := φ w t1 + φ w t2 + φ w t3 + φ w t4
   -- Write out the potentials of both trees
   have : φ w s = rank w s + rank w (node c x t4) + rank w x + φ_children := by
@@ -345,7 +340,6 @@ theorem φ_zigzag (hw : FnLbOne w) (a : α) (l r : Tree α) (f1 f2 : Frame α)
     let s := f2.attach (f1.attach c)
     let step := f2.dir.bringUp (applyChild f2.dir f1.dir.bringUp s)
     φ w step - φ w s + 2 ≤ 3 * (rank w step - rank w c) := by
-  let c := node a l r
   rcases f1 with ⟨d1, k1, n1⟩; rcases f2 with ⟨d2, k2, n2⟩
   cases d1 <;> cases d2 <;> simp_all +decide only [ne_eq]
   · exact φ_zigzag_left hw k2 a k1 n2 l r n1
@@ -557,9 +551,7 @@ lemma FnPos_of_FnLb {w : α → ℝ} {b : ℝ} (h : FnLb b w) (hb : b > 0) : (Fn
 private lemma size_mul_weight (c : ℝ) (t : Tree α) :
     let w' := fun x => c * (w x)
     size w' t = c * (size w t) := by
-  induction t with
-  | nil => simp
-  | node v l r lih rih => unfold size; simp [lih, rih]; linarith
+  simp [size_from_toKeyList, List.sum_map_mul_left]
 
 private lemma rank_mul_weight (hw : FnPos w) (c : ℝ) (hc : c > 0) (t : Tree α) (ht : t ≠ nil) :
     let w' := fun x => c * (w x)

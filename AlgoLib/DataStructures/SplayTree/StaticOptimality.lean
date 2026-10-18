@@ -66,8 +66,7 @@ private lemma staticWeight_size_left [LinearOrder α]
 
 private lemma search_path_len_right [LinearOrder α] (v : α) (l r : Tree α) (q : α) (hqv : v < q) :
     search_path_len (node v l r) q = 1 + search_path_len r q := by
-  simp only [search_path_len, hqv, ↓reduceIte, ite_eq_right_iff, Nat.add_left_cancel_iff]
-  intro h'; apply le_of_lt at h'; apply not_le_of_gt at hqv; contradiction
+  simp [search_path_len, hqv, lt_asymm hqv]
 
 private lemma staticWeight_right [LinearOrder α] (v : α) (l r : Tree α) (q : α) (hqv : v < q) :
     let s := node v l r
