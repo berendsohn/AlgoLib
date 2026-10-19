@@ -471,32 +471,20 @@ theorem splay_total_weighted_cost' [LinearOrder α]
     ∑ i : Fin m, (3 * Real.logb 2 (size w (t 0) / w (q i)) + 1) +
       φ w (t 0) - φ w (t (Fin.last m)) := by
   let B := fun i => (3 * Real.logb 2 (size w (t 0) / w (q i)) + 1)
-  have hbst' : ∀ i : Fin (m+1), (t i).IsBST := by
-    intro i
-    induction i using Fin.induction with
-    | zero => exact hbst
-    | succ i ih => rw [hseq i]; apply IsBST_splay; exact ih
-  have hcont' : ∀ (i : Fin m) (j : Fin (m+1)), (q i) ∈ (t j) := by
-    intro i j
-    induction j using Fin.induction with
-    | zero => apply hcont
-    | succ j jh =>
-      rw [hseq j]
-      apply mem_iff_mem_toKeyList.mpr; simp only [toKeyList_splay]; apply mem_iff_mem_toKeyList.mp
-      exact jh
-  have hsize : ∀ i : Fin (m+1), size w (t i) = size w (t 0) := by
+  have ht : ∀ i : Fin (m+1), (t 0).toKeyList = (t i).toKeyList := by
     intro i
     induction i using Fin.induction with
     | zero => rfl
-    | succ i ih => rw [hseq, size_splay]; exact ih
+    | succ i ih => rw [hseq i, toKeyList_splay, ih]
   apply total_cost_bound m t (fun i => (splay.cost (t i.castSucc) (q i) : ℝ)) (φ w) B
   intro i
   rw [hseq i]
-  have hb := splay_access_lemma hw (t i.castSucc) (q i) (hbst' i.castSucc) (hcont' i i.castSucc)
-  calc φ w (splay (t i.castSucc) (q i)) - φ w (t i.castSucc) +
-        splay.cost (t i.castSucc) (q i)
+  have hb := splay_access_lemma hw (t i.castSucc) (q i)
+    (IsBST_of_toKeyList_eq (ht i.castSucc).symm hbst)
+    (by simp [mem_iff_mem_toKeyList, ←ht i.castSucc, mem_iff_mem_toKeyList.mp (hcont i)])
+  calc φ w (splay (t i.castSucc) (q i)) - φ w (t i.castSucc) + splay.cost (t i.castSucc) (q i)
     ≤ 3 * Real.logb 2 (size w (t i.castSucc) / w (q i)) + 1 := hb
-  _ ≤ 3 * Real.logb 2 (size w (t 0) / w (q i)) + 1 := by rw [hsize i.castSucc]
+  _ ≤ 3 * Real.logb 2 (size w (t 0) / w (q i)) + 1 := by simp [size_from_toKeyList, ht i.castSucc]
 
 /-- Simplified version of `splay_total_weighted_cost'` using a general tree potential upper bound.
 -/
