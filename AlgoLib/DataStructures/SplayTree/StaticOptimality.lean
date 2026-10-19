@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2026 AlgoLib working group. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Benjamin Aram Berendsohn, Antoine du Fresne von Hohenesche
+-/
+
 import AlgoLib.DataStructures.SplayTree.Weighted
 
 /-!
